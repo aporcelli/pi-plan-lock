@@ -8,7 +8,6 @@
   - `/plan on`
   - `/plan off`
   - `/plan status`
-  - `/plan toggle`
   - `/plan lock <key>`
   - `/plan unlock <key>`
 - Keeps footer status always visible:
@@ -43,11 +42,20 @@ The extension guides the assistant toward concise actionable planning and insist
 
 ## Install (local test)
 
+## Quick install
+
 ```bash
-pi -e /home/porche/git-repos/pi-plan/extensions/plan-readonly/index.ts
+pi install npm:pi-plan            # after npm publish
+pi install https://github.com/aporcelli/pi-plan   # direct from repo
 ```
 
-Or copy to auto-discovery path:
+## Local test
+
+```bash
+pi -e ~/git-repos/pi-plan/extensions/plan-readonly/index.ts
+```
+
+Or copy:
 
 - Global: `~/.pi/agent/extensions/plan-readonly.ts`
 - Project: `.pi/extensions/plan-readonly.ts`

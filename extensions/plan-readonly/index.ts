@@ -21,18 +21,16 @@ const SENSITIVE_PATH_FRAGMENTS = [
   "secrets",
 ];
 
-type PlanCommand = "on" | "off" | "status" | "toggle" | "lock" | "unlock";
+type PlanCommand = "on" | "off" | "status" | "lock" | "unlock";
 
 export default function planReadonlyExtension(pi: ExtensionAPI): void {
   let enabled = false;
   let previousActiveTools: string[] | null = null;
   let allowedTools: string[] = [];
 
-  // Session-only lock (not persisted)
   let locked = false;
   let lockHash: string | null = null;
 
-  // Anti-insistence tracking (prompt-driven, no hardcoded response replacement)
   let insistenceCount = 0;
 
   pi.registerFlag("plan", {
@@ -108,13 +106,11 @@ export default function planReadonlyExtension(pi: ExtensionAPI): void {
       ctx.ui.notify("Plan mode is already ON.", "info");
       return;
     }
-
     const toolSet = resolveAllowedTools();
     if (toolSet.length === 0) {
       ctx.ui.notify("Could not enable /plan: no read-only tools available.", "error");
       return;
     }
-
     previousActiveTools = pi.getActiveTools();
     allowedTools = toolSet;
     pi.setActiveTools(allowedTools);
@@ -129,17 +125,14 @@ export default function planReadonlyExtension(pi: ExtensionAPI): void {
       ctx.ui.notify("Plan mode is already OFF.", "info");
       return;
     }
-
     if (locked) {
       setStatus(ctx);
       ctx.ui.notify("Plan mode is locked. Use /plan unlock <key> first.", "error");
       return;
     }
-
     if (previousActiveTools && previousActiveTools.length > 0) {
       pi.setActiveTools(previousActiveTools);
     }
-
     enabled = false;
     previousActiveTools = null;
     allowedTools = [];
@@ -153,29 +146,16 @@ export default function planReadonlyExtension(pi: ExtensionAPI): void {
   function parsePlanCommand(args: string | undefined): { command: PlanCommand; key: string } | null {
     const raw = (args || "").trim();
     if (!raw) return { command: "on", key: "" };
-
     const [first, ...rest] = raw.split(/\s+/);
     const command = first.toLowerCase() as PlanCommand;
     const key = rest.join(" ").trim();
-
-    if (!["on", "off", "status", "toggle", "lock", "unlock"].includes(command)) {
-      return null;
-    }
-
+    if (!["on", "off", "status", "lock", "unlock"].includes(command)) return null;
     return { command, key };
   }
 
   function lockPlanMode(key: string, ctx: ExtensionContext): void {
-    if (!enabled) {
-      turnOn(ctx);
-      if (!enabled) return;
-    }
-
-    if (!key) {
-      ctx.ui.notify("Usage: /plan lock <key>", "warning");
-      return;
-    }
-
+    if (!enabled) { turnOn(ctx); if (!enabled) return; }
+    if (!key) { ctx.ui.notify("Usage: /plan lock <key>", "warning"); return; }
     lockHash = hashSecret(key);
     locked = true;
     setStatus(ctx);
@@ -183,23 +163,9 @@ export default function planReadonlyExtension(pi: ExtensionAPI): void {
   }
 
   function unlockPlanMode(key: string, ctx: ExtensionContext): void {
-    if (!locked) {
-      setStatus(ctx);
-      ctx.ui.notify("Plan mode is not locked.", "info");
-      return;
-    }
-
-    if (!key) {
-      ctx.ui.notify("Usage: /plan unlock <key>", "warning");
-      return;
-    }
-
-    if (!lockHash || hashSecret(key) !== lockHash) {
-      setStatus(ctx);
-      ctx.ui.notify("Invalid lock key.", "error");
-      return;
-    }
-
+    if (!locked) { setStatus(ctx); ctx.ui.notify("Plan mode is not locked.", "info"); return; }
+    if (!key) { ctx.ui.notify("Usage: /plan unlock <key>", "warning"); return; }
+    if (!lockHash || hashSecret(key) !== lockHash) { setStatus(ctx); ctx.ui.notify("Invalid lock key.", "error"); return; }
     locked = false;
     lockHash = null;
     setStatus(ctx);
@@ -216,28 +182,22 @@ export default function planReadonlyExtension(pi: ExtensionAPI): void {
     const obj = input as Record<string, unknown>;
     const keys = ["path", "cwd", "directory", "file", "root", "target"];
     const paths: string[] = [];
-
     for (const key of keys) {
       const value = obj[key];
-      if (typeof value === "string" && value.trim()) {
-        paths.push(value.trim());
-      }
+      if (typeof value === "string" && value.trim()) paths.push(value.trim());
     }
-
     return paths;
   }
 
   pi.registerCommand("plan", {
-    description: "Strict read-only planning mode: /plan on|off|status|toggle|lock <key>|unlock <key>",
+    description: "Strict read-only planning mode: /plan on|off|status|lock <key>|unlock <key> (no subcommand toggles)",
     handler: async (args, ctx) => {
       const parsed = parsePlanCommand(args);
       if (!parsed) {
-        ctx.ui.notify("Usage: /plan on | off | status | toggle | lock <key> | unlock <key>", "warning");
+        ctx.ui.notify("Usage: /plan on | off | status | lock <key> | unlock <key>", "warning");
         return;
       }
-
       const { command, key } = parsed;
-
       if (command === "status") {
         const status = enabled ? "on" : "off";
         const lockState = locked ? "lock" : "unlock";
@@ -245,76 +205,38 @@ export default function planReadonlyExtension(pi: ExtensionAPI): void {
         ctx.ui.notify(`plan (${status}) ${lockState}${tools}`, "info");
         return;
       }
-
-      if (command === "off") {
-        turnOff(ctx);
-        return;
-      }
-
-      if (command === "toggle") {
-        if (enabled) turnOff(ctx);
-        else turnOn(ctx);
-        return;
-      }
-
-      if (command === "lock") {
-        lockPlanMode(key, ctx);
-        return;
-      }
-
-      if (command === "unlock") {
-        unlockPlanMode(key, ctx);
-        return;
-      }
-
+      if (command === "off") { turnOff(ctx); return; }
+      if (command === "lock") { lockPlanMode(key, ctx); return; }
+      if (command === "unlock") { unlockPlanMode(key, ctx); return; }
       turnOn(ctx);
     },
   });
 
   pi.on("session_start", async (_event, ctx) => {
-    locked = false;
-    lockHash = null;
-    insistenceCount = 0;
-
-    if (pi.getFlag("plan") === true) {
-      turnOn(ctx);
-    }
-
+    locked = false; lockHash = null; insistenceCount = 0;
+    if (pi.getFlag("plan") === true) turnOn(ctx);
     setStatus(ctx);
   });
 
   pi.on("tool_call", async (event) => {
     if (!enabled) return;
-
     if (!allowedTools.includes(event.toolName)) {
-      return {
-        block: true,
-        reason: `Plan mode read-only: blocked tool ${event.toolName}.`,
-      };
+      return { block: true, reason: `Plan mode read-only: blocked tool ${event.toolName}.` };
     }
-
     const inputPaths = extractInputPaths(event.input);
     const sensitivePath = inputPaths.find((p) => isSensitivePath(p));
     if (sensitivePath) {
-      return {
-        block: true,
-        reason: `Plan mode security: sensitive path access blocked (${sensitivePath}).`,
-      };
+      return { block: true, reason: `Plan mode security: sensitive path access blocked (${sensitivePath}).` };
     }
   });
 
   pi.on("before_agent_start", async (event) => {
     if (!enabled) return;
-
     const prompt = (event.prompt || "").trim();
     const attackDetected = hasPromptAttackSignals(prompt);
     const executionDemand = hasExecutionDemand(prompt);
-
-    if (executionDemand) {
-      insistenceCount += 1;
-    } else {
-      insistenceCount = 0;
-    }
+    if (executionDemand) insistenceCount += 1;
+    else insistenceCount = 0;
 
     const insistenceRule = executionDemand
       ? insistenceCount > 1
