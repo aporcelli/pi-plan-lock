@@ -2,6 +2,10 @@
 
 `/plan` command for Pi with strict, anti-jailbreak read-only planning mode.
 
+**Plan mode convierte a Pi en un asistente de solo planificación.** No edita, no escribe código, no ejecuta cambios. Solo lee, analiza y devuelve un plan de implementación paso a paso. Ideal para revisar un proyecto antes de meter mano, o para cuando querés evitar que la IA se apure a codificar sin entender el contexto.
+
+Con `/plan` activo, Pi solo puede usar herramientas de lectura (`read`, `grep`, `find`, `ls`). Todo lo demás está bloqueado a nivel de runtime. Incluye protección anti-jailbreak, bloqueo de paths sensibles y un sistema de lock con clave para que no se pueda desactivar sin permiso.
+
 ## What it does
 
 - Adds `/plan` subcommands:
@@ -40,9 +44,7 @@ The extension guides the assistant toward concise actionable planning and insist
 - Lock key is **session-only** (in memory, not persisted).
 - If key is forgotten, restarting Pi clears lock.
 
-## Install (local test)
-
-## Quick install
+## Install
 
 ```bash
 pi install npm:pi-plan            # after npm publish
