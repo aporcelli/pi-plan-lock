@@ -1,5 +1,5 @@
 {
-  "name": "pi-plan",
+  "name": "pi-plan-lock",
   "version": "0.1.1",
   "description": "Pi extension that adds strict /plan read-only planning mode with anti-jailbreak guardrails",
   "type": "module",

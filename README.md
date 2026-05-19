@@ -1,4 +1,4 @@
-<h1 align="center">📋 pi-plan</h1>
+<h1 align="center">🔒 pi-plan-lock</h1>
 <p align="center">
   <strong>Strict read-only planning mode for Pi — anti-jailbreak, lockable, community-ready</strong>
 </p>
@@ -70,12 +70,12 @@ Other Pi agents, skills (gentle-ai, SDD, etc.) or prompt templates can still run
 
 ### Published package
 ```bash
-pi install npm:pi-plan
+pi install npm:pi-plan-lock
 ```
 
 ### Direct from GitHub
 ```bash
-pi install https://github.com/aporcelli/pi-plan
+pi install https://github.com/aporcelli/pi-plan-lock
 ```
 
 ### Local test
