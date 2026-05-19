@@ -2,11 +2,23 @@
 
 `/plan` command for Pi with strict, anti-jailbreak read-only planning mode.
 
-**Plan mode convierte a Pi en un asistente de solo planificación.** No edita, no escribe código, no ejecuta cambios. Solo lee, analiza y devuelve un plan de implementación paso a paso. Ideal para revisar un proyecto antes de meter mano, o para cuando querés evitar que la IA se apure a codificar sin entender el contexto.
+**Plan mode turns Pi into a planning-only assistant.** No editing, no code generation, no execution. Only reads, analyzes, and returns a step-by-step implementation plan. Use it before touching code, or whenever you want to stop the AI from rushing into changes without understanding context.
 
-Con `/plan` activo, Pi solo puede usar herramientas de lectura (`read`, `grep`, `find`, `ls`). Todo lo demás está bloqueado a nivel de runtime. Incluye protección anti-jailbreak, bloqueo de paths sensibles y un sistema de lock con clave para que no se pueda desactivar sin permiso.
+When `/plan` is on, Pi can only use read-only tools (`read`, `grep`, `find`, `ls`). Everything else is blocked at the runtime level. Includes anti-jailbreak protection, sensitive path blocking, and a key-lock system so plan mode cannot be turned off without authorization.
 
 ## What it does
+
+## Compatibility with other agents & skills
+
+`/plan` enforces read-only at the **tool execution gate** (`tool_call` event + `setActiveTools`). Other Pi agents, skills (gentle-ai, SDD, etc.) or prompt templates can still run and inject their own instructions — but any attempt to write, edit, execute, or call MCP tools will be blocked by the plan-mode guard.
+
+This means:
+- Skills that only read, search, or analyze **work normally** inside plan mode.
+- Skills that try to write files, run destructive commands, or modify state are **blocked**.
+- System prompt contributions from other agents **stack** with plan mode's own rules — Pi merges all `before_agent_start` output.
+- `/plan off` restores your previous tool set, including any tools that other agents registered.
+
+No conflicts expected in normal use. If a skill absolutely needs write access, it will fail gracefully with a block message.
 
 - Adds `/plan` subcommands:
   - `/plan on`
