@@ -70,7 +70,7 @@ Other Pi agents, skills (gentle-ai, SDD, etc.) or prompt templates can still run
 
 ### Published package
 ```bash
-pi install npm:pi-plan-lock
+pi install npm:@porche/pi-plan-lock
 ```
 
 ### Direct from GitHub
