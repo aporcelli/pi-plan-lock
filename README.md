@@ -52,6 +52,20 @@ Or copy to auto-discovery path:
 - Global: `~/.pi/agent/extensions/plan-readonly.ts`
 - Project: `.pi/extensions/plan-readonly.ts`
 
+## Versioning & release discipline
+
+Every publish/update must bump `package.json` version first.
+
+Suggested commands:
+
+```bash
+npm run version:patch   # bugfix/small update
+npm run version:minor   # backward-compatible feature
+npm run version:major   # breaking change
+```
+
+Then push commit/tag and publish.
+
 ## Usage
 
 1. `/plan on`
