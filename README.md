@@ -49,6 +49,7 @@ Only reads, analyzes, and returns a step-by-step implementation plan.
 | **3) Anti-jailbreak** | Prompt patterns in EN/ES/PT/FR that attempt to bypass or disable rules are **detected and ignored** by the system prompt |
 | **4) Lock mode** | `/plan lock <key>` prevents `/plan off` until unlocked. Key is **session-only** — forgotten key = restart Pi |
 | **5) Anti-insistence** | If the user insists on coding/execution while in plan mode, the model responds with a minimal single sentence: use `/plan off` |
+| **6) State awareness** | The model is told the plan mode state (**ON** or **OFF**) at every prompt, so it never tries blocked tools or gets confused by restricted access |
 
 ---
 
@@ -131,6 +132,7 @@ With `/plan on`, try prompts like these:
 │  /plan on │ setActiveTools │ tool_call guard    │
 ├─────────────────────────────────────────────────┤
 │  before_agent_start: inject system rules        │
+│  + state awareness (always ON or OFF indicator) │
 │  + anti-jailbreak detection                     │
 │  + insistence handling                          │
 │  + read-loop prevention                          │
@@ -139,6 +141,36 @@ With `/plan on`, try prompts like these:
 │  session lock: hash(key) in-memory              │
 └─────────────────────────────────────────────────┘
 ```
+
+### State awareness
+
+On every response generation, `before_agent_start` injects a visible state block:
+
+**When plan mode is ON:**
+```
+════════════════════════════════════════════════════════════
+🔒 PLAN MODE: ACTIVE — STRICT READ-ONLY
+════════════════════════════════════════════════════════════
+State: ON | Allowed: read, grep, find, ls | Locked: no
+
+RULES:
+1. Only analyze and plan. No editing, no code generation, no execution.
+2. If you call a tool and it is BLOCKED (error), stop trying that action.
+   Inform the user: they need /plan off to perform that action.
+3. Never edit files, never execute write actions, never claim implementation happened.
+...
+```
+
+**When plan mode is OFF:**
+```
+────────────────────────────────────────────────────────────
+🔓 PLAN MODE: INACTIVE
+────────────────────────────────────────────────────────────
+State: OFF | Full tool access restored.
+Normal behavior: all tools are available for reading, writing, and executing.
+```
+
+This ensures the model **always knows** the current mode — avoiding failed tool calls, confusion, or attempting restricted operations.
 
 ---
 
