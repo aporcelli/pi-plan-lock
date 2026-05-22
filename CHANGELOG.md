@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] — 2026-05-22
+
+### Changed
+
+- Added npm package metadata fields in `package.json`:
+  - `repository`
+  - `homepage`
+  - `bugs`
+- README restructured into a more visual quick-scan format (emoji sections, clearer command flow, architecture summary).
+- Version bumped to `0.3.1` for documentation + package metadata refresh.
+
 ## [0.3.0] — 2026-05-22
 
 ### Added
